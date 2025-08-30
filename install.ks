@@ -78,9 +78,6 @@ WIPE_TARGET=$(
 		echo 0
 	fi
 )
-
-chvt 1
-
 %end
 
 %post
