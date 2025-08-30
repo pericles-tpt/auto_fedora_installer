@@ -1,5 +1,6 @@
 %pre
 #!/bin/sh
+echo "before func"
 FN_LIST_DISKS(){
 	echo "$(printf "%-8s\t%4s\t%8s\t%5s\t%s\n" "ID" "TYPE" "CAPACITY" "%USED" "MODEL")"
 	lsblk | grep disk | while read j; do	
