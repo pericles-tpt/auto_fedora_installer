@@ -70,6 +70,8 @@ fi
 WIPE_TARGET=0
 echo "Would you like to wipe '$TARGET_DISK'? Will use remaining capacity otherwise [Y/n]"
 WIPE_TARGET=$(FN_PROMPT_YN)
+%end
+
 
 %post
 FN_TEST_WIFI(){
@@ -185,3 +187,4 @@ else
 	echo "Wifi not configured, skipping wifi setup..."
 fi
 echo ""
+%end
