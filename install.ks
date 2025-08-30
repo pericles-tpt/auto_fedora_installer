@@ -7,54 +7,57 @@ echo "Which disk would you like to install to? Provide the 'ID' of the target:"
 LIST_DISKS_OUT=$(
 # FN_LIST_DISKS
 echo "$(printf "%-8s\t%4s\t%8s\t%5s\t%s\n" "ID" "TYPE" "CAPACITY" "%USED" "MODEL")"
-lsblk | grep disk | while read j; do	
-	id=$(echo $j | awk '{print $1}')
-	size=$(echo $j | awk '{print $4}')
+	lsblk | grep disk | while read j; do	
+		id=$(echo $j | awk '{print $1}')
+		size=$(echo $j | awk '{print $4}')
 
-	if [ $size = "0B" ]; then
-		continue
-	fi
-	totalSizeBytes=$(fdisk -l "/dev/$id" | head -n 1 | awk '{print int($5)}')
-	freeBytes=$(sfdisk --list-free "/dev/$id" | head -n 1 | awk '{print int($6)}')
-	usedBytes=$((totalSizeBytes - freeBytes))
-	capacityUsedPc="?"
-	if [ $usedBytes -ge 0 ]; then
-		capacityUsedPc=$(echo "scale=3; (($usedBytes/$totalSizeBytes) * 100)" | bc | awk '{printf "%.1f", $1}')
-	fi
+		if [ $size = "0B" ]; then
+			continue
+		fi
+		totalSizeBytes=$(fdisk -l "/dev/$id" | head -n 1 | awk '{print int($5)}')
+		freeBytes=$(sfdisk --list-free "/dev/$id" | head -n 1 | awk '{print int($6)}')
+		usedBytes=$((totalSizeBytes - freeBytes))
+		capacityUsedPc="?"
+		if [ $usedBytes -ge 0 ]; then
+			capacityUsedPc=$(echo "scale=3; (($usedBytes/$totalSizeBytes) * 100)" | bc | awk '{printf "%.1f", $1}')
+		fi
 
-	maybe_model=""
-	if [ -e "/sys/class/block/$id/device/model" ]; then
-		maybe_model=$(cat /sys/class/block/"$id"/device/model | tr -d ' ')
-	fi
-	model="?"
-	if [ "$maybe_model" != "" ]; then
-		model="$maybe_model"
-	fi
-	type="?"
-	if [ $(find /dev/disk/by-id/ -lname "*""$id" | grep usb | wc -l) -gt 0 ]; then 
-		type="USB"
-	else
-		case "$id" in
-			"sda"*)
-				type="SATA";;
-			"mmc"*)
-				type="SD";;
-			"nvme"*)
-				type="NVME";;
-			*)
-				;;
-		esac							
-	fi
-	echo "$(printf "%-8s\t%-4s\t%8s\t%5s\t%s\n" "$id" "$type" "$size" "$capacityUsedPc" "$model")"
-done
+		maybe_model=""
+		if [ -e "/sys/class/block/$id/device/model" ]; then
+			maybe_model=$(cat /sys/class/block/"$id"/device/model | tr -d ' ')
+		fi
+		model="?"
+		if [ "$maybe_model" != "" ]; then
+			model="$maybe_model"
+		fi
+		type="?"
+		if [ $(find /dev/disk/by-id/ -lname "*""$id" | grep usb | wc -l) -gt 0 ]; then 
+			type="USB"
+		else
+			case "$id" in
+				"sda"*)
+					type="SATA";;
+				"mmc"*)
+					type="SD";;
+				"nvme"*)
+					type="NVME";;
+				*)
+					;;
+			esac							
+		fi
+		echo "$(printf "%-8s\t%-4s\t%8s\t%5s\t%s\n" "$id" "$type" "$size" "$capacityUsedPc" "$model")"
+	done
 )
 echo "$LIST_DISKS_OUT"
 
 VALID_DISKS_LIST=$(echo "$LIST_DISKS_OUT" | tail -n +2 | awk '{print $1}')
 
+exec < /dev/tty6 > /dev/tty6
+chvt 6
+
 TARGET_VALID=0
 while [ $TARGET_VALID -eq 0 ]; do
-	IFS='|' read TARGET_DISK < <( zenity --entry --text="Provide the 'ID' of the target disk" )
+	read -p "> " TARGET_DISK
 	TARGET_VALID=$(echo "$VALID_DISKS_LIST" | grep "^${TARGET_DISK}$" | wc -l)
 	if [ $TARGET_VALID -gt 0 ]
 	then
@@ -66,9 +69,19 @@ done
 # 2. Prompt user for them to decide whether to wipe the disk or not
 WIPE_TARGET=0
 echo "Would you like to wipe '$TARGET_DISK'? Will use remaining capacity otherwise [Y/n]"
-WIPE_TARGET=$(FN_PROMPT_YN)
-%end
+WIPE_TARGET=$(
+	read -p "> " PROMPT_RES
+	if [ "$PROMPT_RES" = "Y" ] | [ "$PROMPT_RES" = "y" ] | [ "$PROMPT_RES" = "" ]
+	then
+		echo 1
+	else
+		echo 0
+	fi
+)
 
+chvt 1
+
+%end
 
 %post
 FN_TEST_WIFI(){
