@@ -45,26 +45,24 @@ FN_LIST_DISKS(){
 }
 
 # 1. Get the target drive
-if [ "$TARGET_DISK" = "" ]
-then
-	echo "Which disk would you like to install to? Provide the 'ID' of the target:"
+TARGET_DISK=""
+echo "Which disk would you like to install to? Provide the 'ID' of the target:"
 
-	LIST_DISKS_OUT=$(FN_LIST_DISKS)
-	echo "$LIST_DISKS_OUT"
+LIST_DISKS_OUT=$(FN_LIST_DISKS)
+echo "$LIST_DISKS_OUT"
 
-	VALID_DISKS_LIST=$(echo "$LIST_DISKS_OUT" | tail -n +2 | awk '{print $1}')
+VALID_DISKS_LIST=$(echo "$LIST_DISKS_OUT" | tail -n +2 | awk '{print $1}')
 
-	TARGET_VALID=0
-	while [ $TARGET_VALID -eq 0 ]; do
-		read -p "> " TARGET_DISK
-		TARGET_VALID=$(echo "$VALID_DISKS_LIST" | grep "^${TARGET_DISK}$" | wc -l)
-		if [ $TARGET_VALID -gt 0 ]
-		then
-			break
-		fi
-		echo "! invalid disk: Type an id from the list above should look similar to 'sdX', 'nvmeX', etc"
-	done
-fi
+TARGET_VALID=0
+while [ $TARGET_VALID -eq 0 ]; do
+	read -p "> " TARGET_DISK
+	TARGET_VALID=$(echo "$VALID_DISKS_LIST" | grep "^${TARGET_DISK}$" | wc -l)
+	if [ $TARGET_VALID -gt 0 ]
+	then
+		break
+	fi
+	echo "! invalid disk: Type an id from the list above should look similar to 'sdX', 'nvmeX', etc"
+done
 
 # 2. Prompt user for them to decide whether to wipe the disk or not
 WIPE_TARGET=0
@@ -160,6 +158,8 @@ FN_TEST_WIFI(){
 }
 
 # 1. Wifi
+WIFI_SSID=""
+WIFI_PASS=""
 WIFI_FILE_NAME=""
 WIFI_FILE_CONTENTS=""
 echo ""
