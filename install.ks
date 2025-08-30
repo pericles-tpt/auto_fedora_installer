@@ -1,5 +1,8 @@
 %pre
 #!/bin/sh
+exec < /dev/tty6 > /dev/tty6
+chvt 6
+
 # 1. Get the target drive
 TARGET_DISK=""
 echo "Which disk would you like to install to? Provide the 'ID' of the target:"
@@ -51,9 +54,6 @@ echo "$(printf "%-8s\t%4s\t%8s\t%5s\t%s\n" "ID" "TYPE" "CAPACITY" "%USED" "MODEL
 echo "$LIST_DISKS_OUT"
 
 VALID_DISKS_LIST=$(echo "$LIST_DISKS_OUT" | tail -n +2 | awk '{print $1}')
-
-exec < /dev/tty6 > /dev/tty6
-chvt 6
 
 TARGET_VALID=0
 while [ $TARGET_VALID -eq 0 ]; do
